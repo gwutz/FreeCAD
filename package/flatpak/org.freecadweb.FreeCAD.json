@@ -1,0 +1,980 @@
+{
+  "app-id": "org.freecadweb.FreeCAD",
+  "base": "io.qt.qtwebengine.BaseApp",
+    "base-version": "5.15-21.08",
+  "runtime": "org.kde.Platform",
+  "runtime-version": "5.15-21.08",
+  "sdk": "org.kde.Sdk",
+  "command": "FreeCAD",
+  "finish-args": [
+    "--socket=wayland",
+    "--env=QT_QPA_PLATFORM=xcb",
+    "--share=ipc",
+    "--socket=x11",
+    "--device=dri",
+    "--share=network",
+    "--filesystem=host",
+    "--filesystem=xdg-run/gvfs",
+    "--talk-name=org.freedesktop.Flatpak",
+    "--env=TMPDIR=/var/tmp"
+  ],
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.llvm12"
+  ],
+  "add-extensions": {
+    "org.freecadweb.FreeCAD.Manual": {
+      "directory": "share/doc/FreeCAD",
+      "bundle": true,
+      "no-autodownload": true,
+      "autodelete": true
+    }
+  },
+  "cleanup": [
+    "/include",
+    "/share/aclocal",
+    "/share/cmake",
+    "/share/man",
+    "*.a",
+    "*.la"
+  ],
+  "cleanup-commands": [
+    "/app/cleanup-BaseApp.sh"
+  ],
+  "modules": [
+    "glu-9.json",
+    {
+      "name": "pyside2",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "build-options": {
+        "prepend-path": "/usr/lib/sdk/llvm12/bin",
+        "prepend-ld-library-path": "/usr/lib/sdk/llvm12/lib"
+      },
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBUILD_TESTS=OFF"
+      ],
+      "cleanup": [
+        "/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://download.qt.io/official_releases/QtForPython/pyside2/PySide2-5.15.2-src/pyside-setup-opensource-src-5.15.2.tar.xz",
+          "sha256": "b306504b0b8037079a8eab772ee774b9e877a2d84bab2dbefbe4fa6f83941418"
+        },
+        {
+          "type": "shell",
+          "commands": [
+            "mkdir -p /app/include/qt5tmp && cp -R /usr/include/Qt* /app/include/qt5tmp",
+            "sed -i 's|\\(--include-paths=\\)|\\1/app/include/qt5tmp:|' sources/pyside2/cmake/Macros/PySideModules.cmake"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "swig",
+      "config-opts": [
+        "--without-pcre"
+      ],
+      "cleanup": [
+        "*"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://downloads.sourceforge.net/project/swig/swig/swig-4.0.2/swig-4.0.2.tar.gz",
+          "sha256": "d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc"
+        }
+      ]
+    },
+    {
+      "name": "libXmu",
+      "cleanup": [
+        "/share/doc"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://www.x.org/archive//individual/lib/libXmu-1.1.2.tar.bz2",
+          "sha256": "756edc7c383254eef8b4e1b733c3bf1dc061b523c9f9833ac7058378b8349d0b"
+        }
+      ]
+    },
+    {
+      "name": "eigen",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "cleanup": [
+        "*"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.bz2",
+          "sha256": "685adf14bd8e9c015b78097c1dc22f2f01343756f196acdc76a678e1ae352e11"
+        }
+      ]
+    },
+    {
+      "name": "tcl",
+      "subdir": "unix",
+      "build-options": {
+        "no-debuginfo": true
+      },
+      "cleanup": [
+        "/bin",
+        "/man"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://downloads.sourceforge.net/project/tcl/Tcl/8.6.8/tcl8.6.8-src.tar.gz",
+          "sha256": "c43cb0c1518ce42b00e7c8f6eaddd5195c53a98f94adc717234a65cbcfd3f96a"
+        }
+      ]
+    },
+    {
+      "name": "tk",
+      "subdir": "unix",
+      "build-options": {
+        "no-debuginfo": true
+      },
+      "make-install-args": [
+        "install-private-headers"
+      ],
+      "cleanup": [
+        "/bin",
+        "/man"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://downloads.sourceforge.net/project/tcl/Tcl/8.6.8/tk8.6.8-src.tar.gz",
+          "sha256": "49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33"
+        }
+      ]
+    },
+    {
+      "name": "graphviz",
+      "rm-configure": true,
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://ftp.osuosl.org/pub/blfs/conglomeration/graphviz/graphviz-2.40.1.tar.gz",
+          "sha256": "ca5218fade0204d59947126c38439f432853543b0818d9d728c589dfe7f3a421"
+        },
+        {
+          "type": "shell",
+          "commands": [
+            "sed -i '/LIBPOSTFIX=\"64\"/s/64//' configure.ac"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "xerces-c",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "cleanup": [
+        "/bin",
+        "/share/doc"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.2.tar.xz",
+          "sha256": "6daca3b23364d8d883dc77a73f681242f69389e3564543287ed3d073007e0a8e"
+        }
+      ]
+    },
+    {
+      "name": "openmpi",
+      "cleanup": [
+        "/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.1.tar.bz2",
+          "sha256": "3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c"
+        }
+      ]
+    },
+    {
+      "name": "hdf5",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "cleanup": [
+        "/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.21/src/hdf5-1.8.21.tar.bz2",
+          "sha256": "e5b1b1dee44a64b795a91c3321ab7196d9e0871fe50d42969761794e3899f40d"
+        }
+      ]
+    },
+    {
+      "name": "med",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "cleanup": [
+        "/bin",
+        "/share/doc"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "http://files.salome-platform.org/Salome/other/med-3.3.1.tar.gz",
+          "sha256": "dd631ef813838bc7413ff0dd6461d7a0d725bcfababdf772ece67610a8d22588"
+        }
+      ]
+    },
+    {
+      "name": "libspnav",
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://downloads.sourceforge.net/project/spacenav/spacenav%20library%20%28SDK%29/libspnav%200.2.3/libspnav-0.2.3.tar.gz",
+          "sha256": "7ae4d7bb7f6a5dda28b487891e01accc856311440f582299760dace6ee5f1f93"
+        }
+      ]
+    },
+    {
+      "name": "boost",
+      "buildsystem": "simple",
+      "build-commands": [
+        "./bootstrap.sh --prefix=/app --with-libraries=filesystem,program_options,regex,signals,system,thread,python,date_time --with-python=/usr/bin/python3",
+        "./b2 install cxxflags=\"-I/usr/include/python3.7m\" -j $FLATPAK_BUILDER_N_JOBS"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://boostorg.jfrog.io/artifactory/main/release/1.67.0/source/boost_1_67_0.tar.bz2",
+          "sha256": "2684c972994ee57fc5632e03bf044746f6eb45d4920c343937a465fd67a5adba"
+        }
+      ]
+    },
+    {
+      "name": "coin",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "cleanup": [
+        "/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/coin3d/coin/releases/download/Coin-4.0.0/coin-4.0.0-src.tar.gz",
+          "sha256": "e4f4bd57804b8ed0e017424ad2e45c112912a928b83f86c89963df9015251476"
+        }
+      ]
+    },
+    {
+      "name": "soqt",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSOQT_BUILD_DOCUMENTATION=OFF"
+      ],
+      "post-install": [
+        "sed -i '/Qt5/d' /app/lib/cmake/SoQt-1.6.0/soqt-config.cmake"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/coin3d/soqt/releases/download/SoQt-1.6.0/soqt-1.6.0-src.tar.gz",
+          "sha256": "9f535af59f07c907022815679681bd345c9dec2f408c74833f6b1b24bca40e1f"
+        }
+      ]
+    },
+    {
+      "name": "pivy",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py build",
+        "python3 setup.py install --prefix=/app"
+      ],
+      "build-options": {
+        "env": {
+          "PREFIX": "/app"
+        }
+      },
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/coin3d/pivy/archive/0.6.5.tar.gz",
+          "sha256": "16f2e339e5c59a6438266abe491013a20f53267e596850efad1559564a2c1719"
+        },
+        {
+          "type": "shell",
+          "commands": [
+            "sed -i 's|QUIET|REQUIRED|g' CMakeLists.txt",
+            "sed -i 's|-Iinterfaces|-Iinterfaces -I/app/include|' setup.py"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cython",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/59/e3/78c921adf4423fff68da327cc91b73a16c63f29752efe7beb6b88b6dd79d/Cython-0.29.24.tar.gz",
+          "sha256": "cdf04d07c3600860e8c2ebaad4e8f52ac3feb212453c1764a49ac08c827e8443"
+        }
+      ]
+    },
+    {
+      "name": "numpy",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py build -j 1 install --prefix=/app"
+      ],
+      "cleanup": [
+        "/bin",
+        "/lib/python3.*/site-packages/numpy/tests",
+        "/lib/python3.*/site-packages/numpy/*/tests"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/fb/48/b0708ebd7718a8933f0d3937513ef8ef2f4f04529f1f66ca86d873043921/numpy-1.21.4.zip",
+          "sha256": "e6c76a87633aa3fa16614b61ccedfae45b91df2767cf097aa9c933932a7ed1e0"
+        }
+      ]
+    },
+    {
+      "name": "certifi",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/40/a7/ded59fa294b85ca206082306bba75469a38ea1c7d44ea7e1d64f5443d67a/certifi-2020.6.20.tar.gz",
+          "sha256": "5930595817496dd21bb8dc35dad090f1c2cd0adfaf21204bf6732ca5d8ee34d3"
+        }
+      ]
+    },
+    {
+      "name": "cppy",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/36/64/be592e84c443a70ea5dcfb1c30bfe6f10ba7d8eb05c2264c7ceca8498548/cppy-1.1.0.tar.gz",
+          "sha256": "4eda6f1952054a270f32dc11df7c5e24b259a09fddf7bfaa5f33df9fb4a29642"
+        }
+      ]
+    },
+    {
+      "name": "kiwisolver",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/62/b8/db619d97819afb52a3ff5ff6ad3f7de408cc83a8ec2dfb31a1731c0a97c2/kiwisolver-1.2.0.tar.gz",
+          "sha256": "247800260cd38160c362d211dcaf4ed0f7816afb5efe56544748b21d6ad6d17f"
+        }
+      ]
+    },
+    {
+      "name": "matplotlib",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "dest": "build/freetype-2.6.1",
+          "url": "https://downloads.sourceforge.net/project/freetype/freetype2/2.6.1/freetype-2.6.1.tar.gz",
+          "sha256": "0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014"
+        },
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/2b/4c/fe4b36325795524f35d39edc390c89584e9a901df9e615df6f5effddaa0e/matplotlib-3.3.2.tar.gz",
+          "sha256": "3d2edbf59367f03cd9daf42939ca06383a7d7803e3993eb5ff1bee8e8a3fbb6b"
+        }
+      ]
+    },
+    {
+      "name": "six",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/6b/34/415834bfdafca3c5f451532e8a8d9ba89a21c9743a0c59fbd0205c7f9426/six-1.15.0.tar.gz",
+          "sha256": "30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"
+        }
+      ]
+    },
+    {
+      "name": "pyparsing",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/c1/47/dfc9c342c9842bbe0036c7f763d2d6686bcf5eb1808ba3e170afdb282210/pyparsing-2.4.7.tar.gz",
+          "sha256": "c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"
+        }
+      ]
+    },
+    {
+      "name": "setuptools_scm",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/cd/66/fa77e809b7cb1c2e14b48c7fc8a8cd657a27f4f9abb848df0c967b6e4e11/setuptools_scm-4.1.2.tar.gz",
+          "sha256": "a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8"
+        }
+      ]
+    },
+    {
+      "name": "backports_functools_lru_cache",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/ad/2e/aa84668861c3de458c5bcbfb9813f0e26434e2232d3e294469e96efac884/backports.functools_lru_cache-1.6.1.tar.gz",
+          "sha256": "8fde5f188da2d593bd5bc0be98d9abc46c95bb8a9dde93429570192ee6cc2d4a"
+        }
+      ]
+    },
+    {
+      "name": "cycler",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/c2/4b/137dea450d6e1e3d474e1d873cd1d4f7d3beed7e0dc973b06e8e10d32488/cycler-0.10.0.tar.gz",
+          "sha256": "cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"
+        }
+      ]
+    },
+    {
+      "name": "python-dateutil",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/be/ed/5bbc91f03fa4c839c4c7360375da77f9659af5f7086b7a7bdda65771c8e0/python-dateutil-2.8.1.tar.gz",
+          "sha256": "73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"
+        }
+      ]
+    },
+    {
+      "name": "pycollada",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/50/44/d775b312fc2e04cdd80e978f9b3422efe0946b285f1845e66a65f9aa371a/pycollada-0.7.1.tar.gz",
+          "sha256": "d2eb5bc70c474af16223f8eeb83757d8a71e4c97d0c241cd1ef371ef36e5e4e6"
+        }
+      ]
+    },
+    {
+      "name": "git",
+      "make-args": [
+        "NO_TCLTK=YesPlease",
+        "INSTALL_SYMLINKS=1"
+      ],
+      "make-install-args": [
+        "NO_TCLTK=YesPlease",
+        "INSTALL_SYMLINKS=1"
+      ],
+      "post-install": [
+        "find . -type f -name perllocal.pod -delete"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://www.kernel.org/pub/software/scm/git/git-2.28.0.tar.gz",
+          "sha256": "f914c60a874d466c1e18467c864a910dd4ea22281ba6d4d58077cb0c3f115170"
+        }
+      ]
+    },
+    {
+      "name": "GitPython",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/72/ad/5cf16fd1307e0ec17fc2347475e732f64d396649c64ed358a29186f4ce74/GitPython-3.1.9.tar.gz",
+          "sha256": "a03f728b49ce9597a6655793207c6ab0da55519368ff5961e4a74ae475b9fa8e"
+        }
+      ]
+    },
+    {
+      "name": "gitdb",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/d1/05/eaf2ac564344030d8b3ce870b116d7bb559020163e80d9aa4a3d75f3e820/gitdb-4.0.5.tar.gz",
+          "sha256": "c9e1f2d0db7ddb9a704c2a0217be31214e91a4fe1dea1efad19ae42ba0c285c9"
+        }
+      ]
+    },
+    {
+      "name": "smmap",
+      "buildsystem": "simple",
+      "build-commands": [
+        "python3 setup.py install --prefix=/app --root=/"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://files.pythonhosted.org/packages/75/fb/2f594e5364f9c986b2c89eb662fc6067292cb3df2b88ae31c939b9138bb9/smmap-3.0.4.tar.gz",
+          "sha256": "9c98bbd1f9786d22f14b3d4126894d56befb835ec90cef151af566c7e19b5d24"
+        }
+      ]
+    },
+    {
+      "name": "geos",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "cleanup": [
+        "/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://download.osgeo.org/geos/geos-3.7.0.tar.bz2",
+          "sha256": "4fbf41a792fd74293ab59e0a980e8654cd411a9d45416d66eaa12d53d1393fd7"
+        }
+      ]
+    },
+    {
+      "name": "netcdf",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "cleanup": [
+        "/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-4.6.1.tar.gz",
+          "sha256": "89c7957458740b763ae828c345240b8a1d29c2c1fed0f065f99b73181b0b2642"
+        }
+      ]
+    },
+    {
+      "name": "freeimage",
+      "buildsystem": "simple",
+      "build-options": {
+        "cxxflags": "-std=c++14",
+        "arch": {
+          "aarch64": {
+            "cflags": "-fPIC -DPNG_ARM_NEON_OPT=0",
+            "cxxflags": "-fPIC"
+          }
+        }
+      },
+      "build-commands": [
+        "sh gensrclist.sh",
+        "sh genfipsrclist.sh",
+        "make -f Makefile.gnu -j $FLATPAK_BUILDER_N_JOBS",
+        "make -f Makefile.fip -j $FLATPAK_BUILDER_N_JOBS",
+        "make -f Makefile.gnu INCDIR=/app/include INSTALLDIR=/app/lib install",
+        "make -f Makefile.fip INCDIR=/app/include INSTALLDIR=/app/lib install"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://downloads.sourceforge.net/project/freeimage/Source%20Distribution/3.18.0/FreeImage3180.zip",
+          "sha256": "f41379682f9ada94ea7b34fe86bf9ee00935a3147be41b6569c9605a53e438fd"
+        },
+        {
+          "type": "shell",
+          "commands": [
+            "sed -i 's/-o root -g root //g' Makefile.{gnu,fip}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "tbb",
+      "buildsystem": "simple",
+      "build-commands": [
+        "make -j $FLATPAK_BUILDER_N_JOBS",
+        "install -d /app/lib",
+        "install -m755 build/linux_*/*.so* /app/lib",
+        "install -d /app/include",
+        "cp -a include/tbb /app/include"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/oneapi-src/oneTBB/archive/2019_U1.tar.gz",
+          "sha256": "e6fb8dd1a1ae834b4e5f4ae6c4c87a3362f81a3aaeddfa6325168c6cfee59391"
+        }
+      ]
+    },
+    {
+      "name": "VTK",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "cleanup": [
+        "/bin",
+        "/share/doc"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://www.vtk.org/files/release/8.2/VTK-8.2.0.tar.gz",
+          "sha256": "34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb"
+        },
+        {
+          "type": "patch",
+          "paths": [
+            "patches/vtk-python-3.8.patch",
+            "patches/vtk-qt5.15.patch",
+            "patches/vtk-gcc10.patch"
+          ]
+        },
+        {
+          "type": "shell",
+          "commands": [
+            "sed -e 's|REGEX MATCH \\\"\\[3-9\\]|REGEX MATCH \\\"[1-9][0-9]|' -i CMake/VTKGenerateExportHeader.cmake"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "opencascade",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DUSE_FREEIMAGE=ON",
+        "-DUSE_VTK=ON",
+        "-DUSE_TBB=ON",
+        "-DBUILD_DOC_Overview=OFF"
+      ],
+      "cleanup": [
+        "/bin"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "http://http.debian.net/debian/pool/main/o/opencascade/opencascade_7.3.0+dfsg1.orig.tar.gz",
+          "sha256": "f829ee485c0edaf68c845999c38e16604cf333a7bfd44d0d598ef16ed430ac3f"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencascade-vtk.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencascade-build.patch"
+        }
+      ]
+    },
+    {
+      "name": "IfcOpenShell",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "subdir": "cmake",
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DOCC_INCLUDE_DIR=/app/include/opencascade",
+        "-DOCC_LIBRARY_DIR=/app/lib",
+        "-DCOLLADA_SUPPORT=OFF",
+        "-DLIBXML2_INCLUDE_DIR=/usr/include/libxml2"
+      ],
+      "build-options": {
+        "arch": {
+          "x86_64": {
+            "config-opts": [
+              "-DLIBXML2_LIBRARIES=/usr/lib/x86_64-linux-gnu/libxml2.so"
+            ]
+          },
+          "aarch64": {
+            "config-opts": [
+              "-DLIBXML2_LIBRARIES=/usr/lib/aarch64-linux-gnu/libxml2.so"
+            ]
+          }
+        }
+      },
+      "build-commands": [
+        "sed -i 's|/usr|/app|g' ifcwrap/cmake_install.cmake"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/IfcOpenShell/IfcOpenShell/archive/v0.6.0b0.tar.gz",
+          "sha256": "d4a9a28b715512659670f2a101bef64363df7808a64ed30e7019161caae6a914"
+        }
+      ]
+    },
+    {
+      "name": "lapack",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "http://deb.debian.org/debian/pool/main/l/lapack/lapack_3.8.0.orig.tar.gz",
+          "sha256": "deb22cc4a6120bff72621155a9917f485f96ef8319ac074a7afbc68aab88bcf6",
+          "mirror-urls": [
+            "http://www.netlib.org/lapack/lapack-3.8.0.tar.gz"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "arpack",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "build-options": {
+        "env": {
+          "FFLAGS": "-fallow-argument-mismatch",
+          "FCFLAGS": "-fallow-argument-mismatch"
+        }
+      },
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/opencollab/arpack-ng/archive/3.6.3.tar.gz",
+          "sha256": "64f3551e5a2f8497399d82af3076b6a33bf1bc95fc46bbcabe66442db366f453"
+        }
+      ]
+    },
+    {
+      "name": "spooles",
+      "buildsystem": "simple",
+      "build-commands": [
+        "make lib",
+        "make -C MT/src",
+        "install -Dt /app/lib *.a MT/src/*.a",
+        "for f in $(find -name '*.h'); do install -Dt \"/app/include/$(dirname \"$f\")\" \"$f\"; done"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "http://deb.debian.org/debian/pool/main/s/spooles/spooles_2.2.orig.tar.gz",
+          "sha256": "a84559a0e987a1e423055ef4fdf3035d55b65bbe4bf915efaa1a35bef7f8c5dd",
+          "strip-components": 0,
+          "mirror-urls": [
+            "http://www.netlib.org/linalg/spooles/spooles.2.2.tgz"
+          ]
+        },
+        {
+          "type": "patch",
+          "path": "patches/spooles-gcc.patch"
+        }
+      ]
+    },
+    {
+      "name": "OpenBLAS",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://github.com/xianyi/OpenBLAS/archive/v0.3.9.tar.gz",
+          "sha256": "17d4677264dfbc4433e97076220adc79b050e4f8a083ea3f853a53af253bc380"
+        }
+      ]
+    },
+    {
+      "name": "calculix-ccx",
+      "buildsystem": "simple",
+      "build-commands": [
+        "make -C ccx_*/src -f Makefile_MT -j $FLATPAK_BUILDER_N_JOBS",
+        "install -m0755 ccx_*/src/ccx_*_MT /app/bin/ccx"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "http://www.dhondt.de/ccx_2.17.src.tar.bz2",
+          "sha256": "ca708ad4aa729d9f84a9faba343c1bcc0b7cc84ed372616ebb55c8e6fa8f6e50",
+          "strip-components": 2
+        },
+        {
+          "type": "patch",
+          "path": "patches/calculix-cxx-paths.patch"
+        }
+      ]
+    },
+    {
+      "name": "gmsh",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+      ],
+      "cleanup": [
+        "/share/doc"
+      ],
+      "sources": [
+        {
+          "type": "archive",
+          "url": "https://gmsh.info/src/gmsh-4.9.0-source.tgz",
+          "sha256": "b8ef133c9b66ffe12df1747e72d4acf19f1eb1e9cd95eb0f577cbc4081d9bea3"
+        }
+      ]
+    },
+    {
+      "name": "python3-ply",
+      "buildsystem": "simple",
+      "build-commands": [
+        "pip3 install --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} ply==3.11"
+      ],
+      "sources": [
+        {
+          "type": "file",
+          "url": "https://files.pythonhosted.org/packages/a3/58/35da89ee790598a0700ea49b2a66594140f44dec458c07e8e3d4979137fc/ply-3.11-py2.py3-none-any.whl",
+          "sha256": "096f9b8350b65ebd2fd1346b12452efe5b9607f7482813ffca50c22722a807ce"
+        }
+      ]
+    },
+    "python3-pyyaml.json",
+    "python3-Pillow.json",
+    {
+      "name": "FreeCAD",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+        "-DCMAKE_INSTALL_PREFIX=/app/freecad",
+        "-DCMAKE_INSTALL_DATAROOTDIR=/app/share",
+        "-DCMAKE_PREFIX_PATH=/app",
+        "-DBUILD_FLAT_MESH=ON",
+        "-DBUILD_QT5=ON",
+        "-DSHIBOKEN_INCLUDE_DIR=/app/include/shiboken2",
+        "-DPYSIDE_INCLUDE_DIR=/app/include/PySide2",
+        "-DFREECAD_USE_QTWEBMODULE=\"Qt Webkit\""
+      ],
+      "build-options": {
+        "arch": {
+          "x86_64": {
+            "config-opts": [
+              "-DSHIBOKEN_LIBRARY=shiboken2.cpython-39-x86_64-linux-gnu",
+              "-DPYSIDE_LIBRARY=pyside2.cpython-39-x86_64-linux-gnu"
+            ]
+          },
+          "aarch64": {
+            "config-opts": [
+              "-DSHIBOKEN_LIBRARY=shiboken2.cpython-39-aarch64-linux-gnu",
+              "-DPYSIDE_LIBRARY=pyside2.cpython-39-aarch64-linux-gnu"
+            ]
+          }
+        }
+      },
+      "post-install": [
+        "install -Dm755 ../openscad.sh ${FLATPAK_DEST}/bin/openscad",
+        "ln -s /app/freecad/bin/FreeCADCmd /app/bin/FreeCADCmd",
+        "install -D ../FreeCAD.sh /app/bin/FreeCAD",
+        "install -Dm644 ../src/Gui/Icons/freecad-doc.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/mimetypes/${FLATPAK_ID}.application-x-extension-fcstd.svg",
+        "cp /usr/bin/assistant /app/bin"
+      ],
+      "sources": [
+        {
+          "type": "script",
+          "dest-filename": "FreeCAD.sh",
+          "commands": [
+            "exec /app/freecad/bin/FreeCAD -u ${XDG_CONFIG_HOME}/FreeCAD/user.conf -s ${XDG_CONFIG_HOME}/FreeCAD/system.cfg \"$@\""
+          ]
+        },
+        {
+          "type": "git",
+          "url": "https://github.com/FreeCAD/FreeCAD.git"
+        },
+        {
+          "type": "file",
+          "path": "openscad.sh"
+        },
+        {
+          "type": "patch",
+          "path": "patches/freecad-assistant-path.patch"
+        },
+        {
+          "type": "shell",
+          "commands": [
+            "sed -i 's|@PACKAGE_VERSION@|0.19.3|' src/XDGData/org.freecadweb.FreeCAD.appdata.xml.in",
+            "sed -i 's|/usr|/app|g' cMake/FindOpenCasCade.cmake src/Gui/GraphvizView.cpp",
+            "sed -i 's|name=\"org.freecadweb.FreeCAD\"|name=\"org.freecadweb.FreeCAD.application-x-extension-fcstd\"|' src/XDGData/org.freecadweb.FreeCAD.xml",
+            "sqlite3 src/Doc/freecad.qhc \"UPDATE SettingsTable SET Value='0' WHERE Key='CacheDirRelativeToCollection';\""
+          ]
+        }
+      ]
+    }
+  ]
+}
